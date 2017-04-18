@@ -1,0 +1,9 @@
+[package]
+name = "which-rs"
+version = "0.1.0"
+authors = ["realityone <realityone@me.com>"]
+
+[dependencies]
+
+[[bin]]
+name = "which"
