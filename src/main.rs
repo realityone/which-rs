@@ -1,3 +1,7 @@
+use std::env;
+use std::io::Write;
+use std::os::unix::prelude::*;
+
 #[macro_use]
 extern crate uucore;
 
@@ -30,8 +34,48 @@ pub fn uumain(args: Vec<String>) -> i32 {
         all_matches: matches.opt_present("all-matches"),
         silence: matches.opt_present("silence"),
     };
-    println!("{:?}", options);
-    0i32
+    let files = matches.free;
+
+    let mut all_matched = true;
+    let paths = match env::var_os("PATH") {
+        Some(path) => env::split_paths(&path).collect::<Vec<_>>(),
+        None => vec![],
+    };
+    'file_loop: for f in &files {
+        let mut matched = false;
+        for p in &paths {
+            let mut target = p.clone();
+            target.push(f);
+
+            // file not exists
+            if !target.exists() {
+                continue;
+            }
+
+            let metadata =
+                target.metadata().map_err(|_| crash!(1, "read metadata failed")).unwrap();
+            if metadata.mode() & 0o111 == 0 {
+                // Not an executable file
+                continue;
+            }
+
+            // Find an executable file
+            matched = true;
+            if !options.silence {
+                println!("{}", target.to_string_lossy());
+                if !options.all_matches {
+                    break;
+                }
+            }
+        }
+
+        all_matched &= matched;
+    }
+
+    match all_matched {
+        true => 0,
+        false => 1,
+    }
 }
 
 fn main() {
