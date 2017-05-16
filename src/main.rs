@@ -41,7 +41,7 @@ pub fn uumain(args: Vec<String>) -> i32 {
         Some(path) => env::split_paths(&path).collect::<Vec<_>>(),
         None => vec![],
     };
-    'file_loop: for f in &files {
+    for f in &files {
         let mut matched = false;
         for p in &paths {
             let mut target = p.clone();
