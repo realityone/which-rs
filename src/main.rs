@@ -2,21 +2,38 @@
 extern crate uucore;
 
 #[allow(dead_code)]
-static SYNTAX: &'static str = "[options] <pid> [...]"; 
-static SUMMARY: &'static str = ""; 
-static LONG_HELP: &'static str = ""; 
+static SYNTAX: &'static str = "[options] <program> [...]";
+static SUMMARY: &'static str = "which -- locate a program file in the user's path";
+static LONG_HELP: &'static str = "
+ The which utility takes a list of command names and searches the path for each executable \
+     file that would be run
+ had these commands actually been invoked.
+";
 
-#[derive(Clone)]
-struct EchoOptions {
-    newline: bool,
-    escape: bool,
+#[derive(Debug, Clone)]
+struct WhichOptions {
+    all_matches: bool,
+    silence: bool,
+}
+
+pub fn uumain(args: Vec<String>) -> i32 {
+    let matches = new_coreopts!(SYNTAX, SUMMARY, LONG_HELP)
+        .optflag("a",
+                 "all-matches",
+                 "list all instances of executables found (instead of just the first one of each)")
+        .optflag("s",
+                 "silence",
+                 "no output, just return 0 if any of the executables are found, or 1 if none are \
+                  found")
+        .parse(args);
+    let options = WhichOptions {
+        all_matches: matches.opt_present("all-matches"),
+        silence: matches.opt_present("silence"),
+    };
+    println!("{:?}", options);
+    0i32
 }
 
 fn main() {
-    let args = vec!["-h".to_string(), "123".to_string(), "456".to_string()];
-    let matches = new_coreopts!(SYNTAX, SUMMARY, LONG_HELP)
-        .optopt("s", "signal", "specify the <signal> to be sent", "SIGNAL")
-        .optflagopt("l", "list", "list all signal names, or convert one to a name", "LIST")
-        .optflag("L", "table", "list all signal names in a nice table")
-        .parse(args);
+    std::process::exit(uumain(std::env::args().collect()));
 }
