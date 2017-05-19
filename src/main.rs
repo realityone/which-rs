@@ -34,14 +34,14 @@ pub fn uumain(args: Vec<String>) -> i32 {
         all_matches: matches.opt_present("all-matches"),
         silence: matches.opt_present("silence"),
     };
-    let files = matches.free;
+    let files = matches.free.iter().filter(|f| f.len() > 0);
 
     let mut all_matched = true;
     let paths = match env::var_os("PATH") {
         Some(path) => env::split_paths(&path).collect::<Vec<_>>(),
         None => vec![],
     };
-    for f in &files {
+    for f in files {
         let mut matched = false;
         for p in &paths {
             let mut target = p.clone();
