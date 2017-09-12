@@ -1,5 +1,6 @@
 use std::env;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::os::unix::prelude::*;
 
 #[macro_use]
@@ -20,31 +21,12 @@ struct WhichOptions {
     silence: bool,
 }
 
-pub fn uumain(args: Vec<String>) -> i32 {
-    let matches = new_coreopts!(SYNTAX, SUMMARY, LONG_HELP)
-        .optflag("a",
-                 "all-matches",
-                 "list all instances of executables found (instead of just the first one of each)")
-        .optflag("s",
-                 "silence",
-                 "no output, just return 0 if any of the executables are found, or 1 if none are \
-                  found")
-        .parse(args);
-    let options = WhichOptions {
-        all_matches: matches.opt_present("all-matches"),
-        silence: matches.opt_present("silence"),
-    };
-    let files = matches.free.iter().filter(|f| f.len() > 0);
-
+fn which(files: &[&str], paths: &[&Path], match_all: bool, mut result: Option<&mut Vec<PathBuf>>) -> bool {
     let mut all_matched = true;
-    let paths = match env::var_os("PATH") {
-        Some(path) => env::split_paths(&path).collect::<Vec<_>>(),
-        None => vec![],
-    };
     for f in files {
         let mut matched = false;
-        for p in &paths {
-            let mut target = p.clone();
+        for p in paths {
+            let mut target = p.to_path_buf();
             target.push(f);
 
             // file not exists
@@ -61,15 +43,58 @@ pub fn uumain(args: Vec<String>) -> i32 {
 
             // Find an executable file
             matched = true;
-            if !options.silence {
-                println!("{}", target.to_string_lossy());
-                if !options.all_matches {
-                    break;
-                }
+            match result {
+                Some(ref mut r) => r.push(target),
+                None => {}
+            }
+
+            if !match_all {
+                break;
             }
         }
 
         all_matched &= matched;
+    }
+
+    all_matched
+}
+
+pub fn uumain(args: Vec<String>) -> i32 {
+    let matches = new_coreopts!(SYNTAX, SUMMARY, LONG_HELP)
+        .optflag("a",
+                 "all-matches",
+                 "list all instances of executables found (instead of just the first one of each)")
+        .optflag("s",
+                 "silence",
+                 "no output, just return 0 if any of the executables are found, or 1 if none are \
+                  found")
+        .parse(args);
+    let options = WhichOptions {
+        all_matches: matches.opt_present("all-matches"),
+        silence: matches.opt_present("silence"),
+    };
+    let files: Vec<&str> = matches.free.iter()
+        .filter(|f| f.len() > 0)
+        .map(|f| f.as_ref())
+        .collect();
+
+    let paths = match env::var_os("PATH") {
+        Some(path) => env::split_paths(&path).collect::<Vec<_>>(),
+        None => vec![],
+    };
+    let paths: Vec<&Path> = paths.iter().map(|pb| pb.as_path()).collect();
+
+    let mut find_path: Vec<PathBuf> = vec![];
+    let all_matched = which(
+        files.as_slice(),
+        &paths,
+        options.all_matches,
+        Some(&mut find_path));
+
+    if !options.silence {
+        for p in find_path {
+            println!("{}", p.to_string_lossy())
+        }
     }
 
     match all_matched {
