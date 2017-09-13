@@ -53,7 +53,6 @@ pub fn uumain(args: Vec<String>) -> i32 {
         options.all_matches,
         Some(&mut find_path)));
 
-
     if !options.silence {
         for p in find_path {
             println!("{}", p.to_string_lossy())
