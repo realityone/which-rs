@@ -2,6 +2,13 @@
 name = "which-rs"
 version = "0.1.0"
 authors = ["realityone <realityone@me.com>"]
+description = "Check for and locate installed executables from Rust."
+documentation = "https://github.com/realityone/which-rs"
+homepage = "https://github.com/realityone/which-rs"
+readme = "README.md"
+keywords = ["which"]
+categories = ["command-line-utilities", "os"]
+license-file = "LICENSE"
 
 [lib]
 name = "which"
