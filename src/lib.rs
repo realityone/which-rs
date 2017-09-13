@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::os::unix::prelude::*;
 
-pub fn which(files: &[&str], paths: &[&Path], match_all: bool, mut result: Option<&mut Vec<PathBuf>>) -> Result<bool, &'static str> {
+pub fn which(files: &[&str],
+             paths: &[&Path],
+             match_all: bool,
+             mut result: Option<&mut Vec<PathBuf>>) -> Result<bool, &'static str> {
     let mut all_matched = true;
     for f in files {
         let mut matched = false;
