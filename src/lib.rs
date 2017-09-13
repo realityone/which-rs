@@ -4,7 +4,7 @@ use std::os::unix::prelude::*;
 pub fn which(files: &[&str],
              paths: &[&Path],
              match_all: bool,
-             mut result: Option<&mut Vec<PathBuf>>) -> Result<bool, &'static str> {
+             mut result: Option<&mut Vec<PathBuf>>) -> Result<bool, String> {
     let mut all_matched = true;
     for f in files {
         let mut matched = false;
@@ -18,7 +18,7 @@ pub fn which(files: &[&str],
             }
 
             let metadata =
-                target.metadata().map_err(|_| "read metadata failed")?;
+                target.metadata().map_err(|e| format!("read metadata failed: {}", e))?;
             if metadata.mode() & 0o111 == 0 {
                 // Not an executable file
                 continue;
