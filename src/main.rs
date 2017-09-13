@@ -1,10 +1,10 @@
 use std::env;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::os::unix::prelude::*;
 
 #[macro_use]
 extern crate uucore;
+extern crate which;
 
 #[allow(dead_code)]
 static SYNTAX: &'static str = "[options] <program> [...]";
@@ -19,44 +19,6 @@ static LONG_HELP: &'static str = "
 struct WhichOptions {
     all_matches: bool,
     silence: bool,
-}
-
-fn which(files: &[&str], paths: &[&Path], match_all: bool, mut result: Option<&mut Vec<PathBuf>>) -> bool {
-    let mut all_matched = true;
-    for f in files {
-        let mut matched = false;
-        for p in paths {
-            let mut target = p.to_path_buf();
-            target.push(f);
-
-            // file not exists
-            if !target.exists() {
-                continue;
-            }
-
-            let metadata =
-                target.metadata().map_err(|_| crash!(1, "read metadata failed")).unwrap();
-            if metadata.mode() & 0o111 == 0 {
-                // Not an executable file
-                continue;
-            }
-
-            // Find an executable file
-            matched = true;
-            match result {
-                Some(ref mut r) => r.push(target),
-                None => {}
-            }
-
-            if !match_all {
-                break;
-            }
-        }
-
-        all_matched &= matched;
-    }
-
-    all_matched
 }
 
 pub fn uumain(args: Vec<String>) -> i32 {
@@ -85,11 +47,12 @@ pub fn uumain(args: Vec<String>) -> i32 {
     let paths: Vec<&Path> = paths.iter().map(|pb| pb.as_path()).collect();
 
     let mut find_path: Vec<PathBuf> = vec![];
-    let all_matched = which(
+    let all_matched = crash_if_err!(1, which::which(
         files.as_slice(),
         &paths,
         options.all_matches,
-        Some(&mut find_path));
+        Some(&mut find_path)));
+
 
     if !options.silence {
         for p in find_path {

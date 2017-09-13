@@ -8,3 +8,8 @@ uucore = { path = "src/coreutils/src/uucore" }
 
 [[bin]]
 name = "which"
+path = "src/main.rs"
+
+[lib]
+name = "which"
+path = "src/lib.rs"
