@@ -4,11 +4,15 @@ version = "0.1.0"
 authors = ["realityone <realityone@me.com>"]
 
 [dependencies]
-uucore = { path = "src/coreutils/src/uucore" }
+uucore = { path = "src/coreutils/src/uucore", version = "*", optional = true }
+
+[features]
+binaries = ["uucore"]
 
 [[bin]]
 name = "which"
 path = "src/main.rs"
+required-features = ["binaries"]
 
 [lib]
 name = "which"
