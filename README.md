@@ -33,4 +33,4 @@ fn main() {
 
 ## License
 which-rs is licensed under the MIT License - see the 
-[LICENSE](https://github.com/realityone/container-what/blob/master/LICENSE) file for details
+[LICENSE](https://github.com/realityone/which-rs/blob/master/LICENSE) file for details
