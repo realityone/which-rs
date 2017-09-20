@@ -1,13 +1,15 @@
 use std::path::{Path, PathBuf};
 use std::os::unix::prelude::*;
+use std::collections::HashMap;
 
-pub fn which(files: &[&str],
-             paths: &[&Path],
-             match_all: bool,
-             mut result: Option<&mut Vec<PathBuf>>) -> Result<bool, String> {
+pub fn which<'a, 'b>(files: &'a [&'a str],
+                     paths: &'a [&'a Path],
+                     match_all: bool,
+                     mut result: Option<&'b mut HashMap<&'a str, Vec<PathBuf>>>) -> Result<bool, String> {
     let mut all_matched = true;
     for f in files {
         let mut matched = false;
+
         for p in paths {
             let mut target = p.to_path_buf();
             target.push(f);
@@ -27,7 +29,12 @@ pub fn which(files: &[&str],
             // Find an executable file
             matched = true;
             match result {
-                Some(ref mut r) => r.push(target),
+                Some(ref mut r) => {
+                    r.entry(f).or_insert(Vec::new());
+                    if let Some(targets) = r.get_mut(f) {
+                        targets.push(target);
+                    }
+                }
                 None => {}
             }
 

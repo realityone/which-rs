@@ -1,6 +1,7 @@
 use std::env;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::collections::HashMap;
 
 #[macro_use]
 extern crate uucore;
@@ -46,16 +47,18 @@ pub fn uumain(args: Vec<String>) -> i32 {
     };
     let paths: Vec<&Path> = paths.iter().map(|pb| pb.as_path()).collect();
 
-    let mut find_path: Vec<PathBuf> = vec![];
+    let mut find_path = HashMap::new();
     let all_matched = crash_if_err!(1, which::which(
-        files.as_slice(),
-        &paths,
-        options.all_matches,
-        Some(&mut find_path)));
+            files.as_slice(),
+            &paths,
+            options.all_matches,
+            Some(&mut find_path)));
 
     if !options.silence {
-        for p in find_path {
-            println!("{}", p.to_string_lossy())
+        for (_, targets) in &find_path {
+            for p in targets {
+                println!("{}", p.to_string_lossy())
+            }
         }
     }
 
